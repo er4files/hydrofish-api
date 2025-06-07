@@ -22,7 +22,7 @@ function formatTanggalUTC(timeString) {
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method Not Allowed" });
+    return res.status(405).json({ success: false, message: "Method not allowed" });
   }
 
   try {
