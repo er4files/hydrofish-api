@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/kirimdata.js",
+      "src": "api/kirim-data.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "api/kirimdata.js"
+      "src": "/api/kirim-data",
+      "dest": "/api/kirim-data.js"
     }
   ]
 }

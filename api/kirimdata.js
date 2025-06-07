@@ -1,21 +1,24 @@
-require("dotenv").config();
-const express = require("express");
 const admin = require("firebase-admin");
-const cors = require("cors");
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+let appInitialized = false;
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
+if (!appInitialized) {
+  const serviceAccount = require("../serviceAccountKey.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+
+  appInitialized = true;
+}
 
 const db = admin.firestore();
 
-app.post("/api/kirim-data", async (req, res) => {
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Metode hanya POST yang diperbolehkan" });
+  }
+
   try {
     const {
       ph_air,
@@ -45,11 +48,6 @@ app.post("/api/kirim-data", async (req, res) => {
     return res.status(200).json({ success: true, message: "Data berhasil dikirim ke Firestore" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
-});
-
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+};
