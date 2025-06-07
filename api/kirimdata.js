@@ -1,4 +1,3 @@
-require("dotenv").config();
 const express = require("express");
 const admin = require("firebase-admin");
 const cors = require("cors");
@@ -15,8 +14,11 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-app.post("/api/kirim-data", async (req, res) => {
+// Endpoint kirim data sensor air
+app.post("/api/kirimdata", async (req, res) => {
   try {
+    console.log("Data diterima:", req.body);
+
     const {
       ph_air,
       suhu_air,
@@ -26,6 +28,7 @@ app.post("/api/kirim-data", async (req, res) => {
       turbidity
     } = req.body;
 
+    // Validasi timestamp saja
     if (!timestamp) {
       return res.status(400).json({
         success: false,
@@ -42,10 +45,16 @@ app.post("/api/kirim-data", async (req, res) => {
       turbidity
     });
 
-    return res.status(200).json({ success: true, message: "Data berhasil dikirim ke Firestore" });
+    return res.status(200).json({
+      success: true,
+      message: "Data berhasil dikirim ke Firestore"
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error mengirim data:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 });
 

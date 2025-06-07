@@ -15,7 +15,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // Endpoint kirim data sensor air
-app.post("/api/kirim-data", async (req, res) => {
+app.post("/api/kirimdata", async (req, res) => {
   try {
     console.log("Data diterima:", req.body);
 
