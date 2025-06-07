@@ -1,9 +1,15 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/kirim-hydrofish.js", "use": "@vercel/node" }
+    {
+      "src": "api/kirimdata.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
-    { "src": "/api/kirim-hydrofish", "dest": "api/kirim-hydrofish.js" }
+    {
+      "src": "/api/(.*)",
+      "dest": "api/kirimdata.js"
+    }
   ]
 }
