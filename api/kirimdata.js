@@ -1,51 +1,58 @@
-const express = require("express");
 const admin = require("firebase-admin");
-const cors = require("cors");
-const router = express.Router();
-const path = require("path");
 
-const serviceAccountPath = path.join(__dirname, "..", "serviceAccountKey.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(require(serviceAccountPath)),
+    credential: admin.credential.cert(serviceAccount),
   });
 }
 
 const db = admin.firestore();
 
-router.use(cors());
-router.use(express.json());
+function formatTanggalUTC(timeString) {
+  const date = new Date(timeString);
+  const tgl = String(date.getUTCDate()).padStart(2, "0");
+  const bln = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const thn = date.getUTCFullYear();
+  const jam = String(date.getUTCHours()).padStart(2, "0");
+  const menit = String(date.getUTCMinutes()).padStart(2, "0");
+  return `${tgl}/${bln}/${thn} . ${jam}:${menit}`;
+}
 
-router.post("/", async (req, res) => {
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ success: false, message: "Method Not Allowed" });
+  }
+
   try {
-    const { ph_air, suhu_air, tds, tinggi_air, turbidity, timestamp } = req.body;
+    const { ph_air, suhu_air, tds, timestamp, tinggi_air, turbidity } = req.body;
 
     if (
-      ph_air == null ||
-      suhu_air == null ||
-      tds == null ||
-      tinggi_air == null ||
-      !turbidity ||
-      !timestamp
+      ph_air === undefined ||
+      suhu_air === undefined ||
+      tds === undefined ||
+      !timestamp ||
+      tinggi_air === undefined ||
+      !turbidity
     ) {
       return res.status(400).json({ success: false, message: "Data tidak lengkap" });
     }
 
+    const formattedTime = formatTanggalUTC(timestamp);
+
     await db.collection("history").add({
-      ph_air: Number(ph_air),
-      suhu_air: Number(suhu_air),
-      tds: Number(tds),
-      tinggi_air: Number(tinggi_air),
+      ph_air,
+      suhu_air,
+      tds,
+      timestamp: formattedTime,
+      tinggi_air,
       turbidity,
-      timestamp: new Date(timestamp),
     });
 
-    res.status(200).json({ success: true, message: "Data berhasil dikirim ke Firestore" });
+    return res.status(200).json({ success: true, message: "Data berhasil dikirim ke Firestore" });
   } catch (error) {
-    console.error("Error kirim data:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-});
-
-module.exports = router;
+};
