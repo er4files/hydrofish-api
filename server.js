@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 
+app.use(express.json()); // Tambahkan ini supaya req.body bisa terbaca
+
 const kirimDataRoute = require("./api/kirimdata");
 
 app.use("/api/kirim-hydrofish", kirimDataRoute);

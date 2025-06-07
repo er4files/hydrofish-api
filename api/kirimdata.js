@@ -1,3 +1,6 @@
+const express = require("express");
+const router = express.Router();
+
 const admin = require("firebase-admin");
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
@@ -20,11 +23,7 @@ function formatTanggalUTC(timeString) {
   return `${tgl}/${bln}/${thn} . ${jam}:${menit}`;
 }
 
-module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method not allowed" });
-  }
-
+router.post("/", async (req, res) => {
   try {
     const { ph_air, suhu_air, tds, timestamp, tinggi_air, turbidity } = req.body;
 
@@ -55,4 +54,6 @@ module.exports = async (req, res) => {
     console.error(error);
     return res.status(500).json({ success: false, message: error.message });
   }
-};
+});
+
+module.exports = router;
