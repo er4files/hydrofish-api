@@ -8,27 +8,21 @@ app.use(express.json());
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
 
 const db = admin.firestore();
 
-// Endpoint kirim data sensor air
+// 🚀 Endpoint untuk mengirim data
 app.post("/api/kirimdata", async (req, res) => {
   try {
-    console.log("Data diterima:", req.body);
-
     const {
-      ph_air,
-      suhu_air,
-      tds,
-      timestamp,
-      tinggi_air,
-      turbidity
+      ph_air, suhu_air, tds, timestamp, tinggi_air, turbidity
     } = req.body;
 
-    // Validasi timestamp saja
     if (!timestamp) {
       return res.status(400).json({
         success: false,
@@ -50,14 +44,39 @@ app.post("/api/kirimdata", async (req, res) => {
       message: "Data berhasil dikirim ke Firestore"
     });
   } catch (error) {
-    console.error("Error mengirim data:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
+// ✅ Endpoint GET untuk membaca semua data dari Firestore
+app.get("/api/sensordata", async (req, res) => {
+  try {
+    const snapshot = await db.collection("history").orderBy("timestamp", "desc").get();
+
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ❌ Endpoint DELETE untuk menghapus data berdasarkan ID dokumen
+app.delete("/api/sensordata/:id", async (req, res) => {
+  const docId = req.params.id;
+
+  try {
+    await db.collection("history").doc(docId).delete();
+    res.status(200).json({ success: true, message: `Data ${docId} berhasil dihapus` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Jalankan server lokal (untuk testing lokal, vercel akan ignore ini saat deploy)
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
