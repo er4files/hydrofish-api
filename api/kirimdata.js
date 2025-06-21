@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 🔐 Inisialisasi Firebase Admin SDK dari environment variable
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 
 if (!admin.apps.length) {
@@ -16,27 +17,23 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// 🚀 Endpoint untuk mengirim data
+// 🚀 Endpoint untuk mengirim data sensor
 app.post("/api/kirimdata", async (req, res) => {
   try {
     const {
-      ph_air, suhu_air, tds, timestamp, tinggi_air, turbidity
+      ph_air, suhu_air, tds, tinggi_air, turbidity
     } = req.body;
 
-    if (!timestamp) {
-      return res.status(400).json({
-        success: false,
-        message: "Field 'timestamp' wajib diisi"
-      });
-    }
+    // Gunakan waktu sekarang dari server sebagai timestamp
+    const timestamp = new Date();
 
     await db.collection("history").add({
       ph_air: Number(ph_air),
       suhu_air: Number(suhu_air),
       tds: Number(tds),
-      timestamp: new Date(timestamp),
       tinggi_air: Number(tinggi_air),
-      turbidity
+      turbidity,
+      timestamp: timestamp
     });
 
     return res.status(200).json({
@@ -76,7 +73,7 @@ app.delete("/api/sensordata/:id", async (req, res) => {
   }
 });
 
-// Jalankan server lokal (untuk testing lokal, vercel akan ignore ini saat deploy)
+// 🚀 Jalankan server lokal (port 3000)
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
